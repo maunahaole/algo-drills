@@ -41,9 +41,11 @@ header{padding:calc(14px + env(safe-area-inset-top)) 16px 6px}
 .brand{display:flex;justify-content:space-between;align-items:baseline;
   font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase}
 .brand b{color:var(--js)} .brand i{color:#7ea8cf;font-style:normal}
-#resetBtn{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+#resetBtn, #undoBtn{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
   background:none;border:1px solid #3a332c;color:var(--desk-dim);border-radius:8px;padding:5px 9px;cursor:pointer}
 #resetBtn.arm{border-color:var(--rule);color:#e88b7d}
+#undoBtn:disabled{opacity:.32;cursor:default}
+#undoBtn:not(:disabled){border-color:#4a5f4a;color:#8fbf9a}
 .stats{font-family:var(--mono);font-size:11.5px;color:var(--desk-dim);margin-top:8px}
 .bar{height:4px;background:#332c25;border-radius:99px;overflow:hidden;margin-top:7px}
 .bar i{display:block;height:100%;width:0%;background:var(--ok);border-radius:99px;transition:width .3s}
@@ -79,7 +81,7 @@ main{flex:1;min-height:0;padding:10px 16px 4px;display:flex}
 .tag{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;
   color:var(--ink-dim);display:flex;justify-content:space-between;margin-bottom:6px}
 .tag .cat{color:#a04338;font-weight:700}
-.q{font-family:var(--type);font-size:20px;line-height:1.55;font-weight:600;margin:auto 0;padding-top:14px}
+.q{font-family:var(--type);font-size:20px;line-height:1.55;font-weight:600;margin:auto 0;padding-top:14px;white-space:pre-line}
 .hint{font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--ink-dim);
   text-align:center;text-transform:uppercase;margin-top:12px}
 .a{font-size:15px;line-height:1.6;margin-top:10px}
@@ -125,7 +127,7 @@ button:focus-visible{outline:2px solid var(--js);outline-offset:2px}
 <body>
 
 <header>
-  <div class="brand"><span><b>JS</b> ▸ <i>PY</i> · ALGO DRILLS</span><button id="resetBtn">reset</button></div>
+  <div class="brand"><span><b>JS</b> ▸ <i>PY</i> · ALGO DRILLS</span><span style="display:flex;gap:7px"><button id="undoBtn">↶ undo</button><button id="resetBtn">reset</button></span></div>
   <div class="stats" id="stats">loading deck…</div>
   <div class="bar"><i id="barFill"></i></div>
 </header>
@@ -158,7 +160,7 @@ button:focus-visible{outline:2px solid var(--js);outline-offset:2px}
 </footer>
 
 <script>
-const CATS = ["Basics","Types","Collections","Conditionals","Loops","Functions","Tools"];
+const CATS = ["Basics","Types","Collections","Conditionals","Loops","Functions","Built-ins","Tools"];
 
 const DECK = [
 /* ---------- BASICS ---------- */
@@ -195,8 +197,10 @@ count = 10     # int`},
  a:`Both work in both languages. Default to double quotes so an apostrophe inside the text ("it's") doesn't break the string.`},
 
 /* ---------- COLLECTIONS ---------- */
-{id:"c1",cat:"Collections",q:`Grab "green" out of the list`,
- a:`Zero-indexed in both — and index access happens in instant time (O(1)).`,
+{id:"c1",cat:"Collections",q:`colors = ["red", "green", "blue"]
+
+What indexing expression returns "green"?`,
+ a:`[[colors[1]]] — lists are zero-indexed in both languages, so "red" is 0, "green" is 1, "blue" is 2. Index access is instant (O(1)).`,
  js:`let colors = ["red", "green", "blue"];
 colors[1]; // "green"`,
  py:`colors = ["red", "green", "blue"]
@@ -265,12 +269,45 @@ hungry or bored`},
  a:`[[range(5)]] produces 0,1,2,3,4 — up to but NOT including the stop value. Pass it the list's length.`,
  py:`for idx in range(len(colors)):
     print(idx, colors[idx])`},
-{id:"l5",cat:"Loops",q:`You need index AND value together (Python)`,
- a:`[[enumerate]] hands you (index, value) pairs to destructure — cleaner and safer than manual counting.`,
+{id:"l5",cat:"Loops",q:`What problem does Python's  enumerate()  solve?`,
+ a:`Looping when you need BOTH the item and its position. It wraps the iterable and hands back [[(index, value)]] pairs each pass — so you skip the manual counter and its off-by-one risk.`,
  py:`for idx, color in enumerate(colors):
+    print(idx, color)`,
+ note:`Reach for enumerate the moment you catch yourself about to write "idx = 0" before a loop.`},
+{id:"l5b",cat:"Loops",q:`The clunky way vs the  enumerate  way — what does enumerate replace?`,
+ a:`It replaces the hand-rolled counter you'd otherwise increment yourself. Same output, no bookkeeping, nothing to forget.`,
+ py:`# clunky — manual counter
+idx = 0
+for color in colors:
+    print(idx, color)
+    idx += 1
+
+# clean — enumerate does it
+for idx, color in enumerate(colors):
     print(idx, color)`},
+{id:"l5c",cat:"Loops",q:`In  for idx, color in enumerate(colors)  — what is  idx, color  actually doing?`,
+ a:`Tuple unpacking (aka destructuring). Each pass yields a pair like [[(0, "red")]], and the two names on the left split that pair apart automatically — [[idx]] gets the 0, [[color]] gets the "red".`},
+{id:"l5d",cat:"Loops",q:`Trace it: colors = ["red","green","blue"]. What does  enumerate  print?`,
+ a:`Index counts from 0 alongside each value:`,
+ py:`for idx, color in enumerate(colors):
+    print(idx, color)
+
+# 0 red
+# 1 green
+# 2 blue`},
+{id:"l5e",cat:"Loops",q:`⚠ enumerate vs JS forEach — the ordering flip`,
+ a:`The pair order is REVERSED between languages. Python [[enumerate]] gives (index, value). JS [[forEach]] gives (value, index). Muscle memory from one will bite you in the other.`,
+ py:`for idx, color in enumerate(colors):   # index FIRST`,
+ js:`colors.forEach((color, idx) => {});    // value FIRST`},
+{id:"l5f",cat:"Loops",q:`Make enumerate start counting at 1 instead of 0`,
+ a:`Pass a second argument. Handy for human-facing output like numbered lists.`,
+ py:`for rank, color in enumerate(colors, start=1):
+    print(rank, color)
+# 1 red
+# 2 green
+# 3 blue`},
 {id:"l6",cat:"Loops",q:`You need index AND value together (JS)`,
- a:`[[.entries()]] yields [index, value] pairs that you destructure on the spot.`,
+ a:`[[.entries()]] yields [index, value] pairs that you destructure on the spot. Note: here the order is index-first, matching Python — but [[forEach]] is value-first. Know which you're using.`,
  js:`for (const [idx, color] of colors.entries()) {
   console.log(idx, color);
 }`},
@@ -317,6 +354,42 @@ hungry or bored`},
  py:`multiply = lambda a, b: a * b`},
 {id:"f6",cat:"Functions",q:`What does DRY stand for, and what's the fix?`,
  a:`Don't Repeat Yourself. The moment you're copy-pasting the same logic, wrap it in a function and call it instead.`},
+
+/* ---------- BUILT-INS ---------- */
+{id:"bi1",cat:"Built-ins",q:`Function or method — the dot test`,
+ a:`A FUNCTION stands alone and takes its target inside the parens — [[enumerate(colors)]]. A METHOD belongs to an object and is called on it with a dot — [[colors.entries()]]. Test: object on the left of a dot? Method.`},
+{id:"bi2",cat:"Built-ins",q:`Count the items in a collection — two languages, two shapes`,
+ a:`Python uses a built-in FUNCTION. JS uses a PROPERTY — no parens at all. Typing [[colors.len()]] in Python or [[len(colors)]] in JS is a classic cross-language error.`,
+ js:`colors.length      // property — no ()`,
+ py:`len(colors)        # function`},
+{id:"bi3",cat:"Built-ins",q:`The three forms of range()`,
+ a:`Start defaults to 0, stop is ALWAYS excluded, step defaults to 1.`,
+ py:`range(5)           # 0,1,2,3,4
+range(2, 5)        # 2,3,4
+range(3, 100, 3)   # 3,6,9,...,99`},
+{id:"bi4",cat:"Built-ins",q:`Total every multiple of 3 below 100 — one line, no loop`,
+ a:`[[sum()]] totals any iterable, and [[range]] with a step generates the multiples. Two built-ins doing the work a whole for loop would.`,
+ py:`sum(range(3, 100, 3))   # 1683`},
+{id:"bi5",cat:"Built-ins",q:`Why does Python's filter() need list() wrapped around it?`,
+ a:`[[filter()]] returns a lazy filter object — it hasn't actually done the work yet. [[list()]] forces it to run and hands you a real list you can print and index. Same reason [[enumerate()]] prints as an object until you loop over it.`,
+ py:`filter(lambda n: n % 2 == 0, nums)
+# <filter object at 0x...>
+
+list(filter(lambda n: n % 2 == 0, nums))
+# [2, 4]`},
+{id:"bi6",cat:"Built-ins",q:`Is console.log a function or a method?`,
+ a:`Method — [[log]] is called with a dot on the [[console]] object. Python's [[print()]] is a true standalone built-in function. The dot test settles it.`},
+{id:"bi7",cat:"Built-ins",q:`Trick card: is Python's  del  a function?`,
+ a:`No — it's a statement (a keyword), not a function. No parentheses, no return value. It just removes the name or key.`,
+ py:`del my_dict["is_ok"]   # no parens`},
+{id:"bi8",cat:"Built-ins",q:`Convert between number and string — the kata staple`,
+ a:`[[str()]] and [[int()]] are built-in conversion functions. Number → string lets you walk the digits; string → int lets you do math on it.`,
+ py:`str(1234)   # "1234" — now iterable
+int("42")   # 42 — now math-ready`},
+{id:"bi9",cat:"Built-ins",q:`Check what type you're actually holding`,
+ a:`Python: the [[type()]] function. JS: the [[typeof]] operator — no parens needed. First move when a bug smells like a string pretending to be a number.`,
+ js:`typeof value   // "string", "number", ...`,
+ py:`type(value)    # <class 'str'>, <class 'int'>`},
 
 /* ---------- TOOLS ---------- */
 {id:"o1",cat:"Tools",q:`Keep only the evens from [1, 2, 3, 4]`,
@@ -402,6 +475,7 @@ function snip(kind,label,code){
 
 /* ================= render ================= */
 function render(){
+  $("undoBtn").disabled = !lastAction;
   const pool=inCat(), doneCt=pool.filter(x=>mastered.has(x.id)).length;
   $("stats").textContent = queue.length
     ? `${queue.length} to go · ${doneCt}/${pool.length} mastered · ${cat.toLowerCase()}`
@@ -435,16 +509,31 @@ function render(){
 }
 
 /* ================= actions ================= */
-function again(){ if(queue.length){ queue.push(queue.shift()); render(); } }
+let lastAction=null; // snapshot for one-step undo
+
+function snapshot(kind){
+  lastAction={kind, queue:[...queue], mastered:new Set(mastered)};
+}
+function again(){
+  if(!queue.length) return;
+  snapshot("again"); queue.push(queue.shift()); render();
+}
 function got(){
   if(!queue.length) return;
-  mastered.add(queue.shift()); saveProgress(); render();
+  snapshot("got"); mastered.add(queue.shift()); saveProgress(); render();
+}
+function undo(){
+  if(!lastAction) return;
+  queue=[...lastAction.queue]; mastered=new Set(lastAction.mastered);
+  lastAction=null; saveProgress(); render();
 }
 function shuffle(){
+  lastAction=null; // shuffle isn't undoable; clear stale snapshot
   for(let i=queue.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [queue[i],queue[j]]=[queue[j],queue[i]]; }
   render();
 }
 function resetCat(){
+  lastAction=null;
   inCat().forEach(x=>mastered.delete(x.id));
   saveProgress(); buildQueue(); render();
 }
@@ -454,6 +543,7 @@ $("card").addEventListener("click",()=>$("card").classList.toggle("flip"));
 $("againBtn").addEventListener("click",again);
 $("gotBtn").addEventListener("click",got);
 $("shufBtn").addEventListener("click",shuffle);
+$("undoBtn").addEventListener("click",undo);
 $("doneReset").addEventListener("click",resetCat);
 $("doneAll").addEventListener("click",()=>{ cat="All"; drawChips(); buildQueue(); render(); });
 
@@ -469,6 +559,7 @@ document.addEventListener("keydown",e=>{
   if(e.code==="Space"){ e.preventDefault(); $("card").classList.toggle("flip"); }
   if(e.key==="1") again();
   if(e.key==="2") got();
+  if(e.key==="u"||e.key==="z") undo();
 });
 
 function drawChips(){
