@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#221d19">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Algo Drills">
+<title>JS ▸ PY Algo Flashcards</title>
+<style>
+:root{
+  --desk:#221d19;        /* dark walnut desk */
+  --desk-ink:#cfc6b8;    /* light text on desk */
+  --desk-dim:#8f8574;
+  --paper:#f7f2e6;       /* manila index card */
+  --paper-edge:#e3dcc9;
+  --line:#c8d8e6;        /* ruled blue lines */
+  --rule:#e2574c;        /* index-card red rule */
+  --ink:#26262e;         /* graphite ink */
+  --ink-dim:#6f6a5e;
+  --js:#f7df1e;
+  --py:#3776ab;
+  --ok:#2e7d4f;          /* stamp green */
+  --again:#b34a3c;
+  --term:#14181d;        /* terminal chip */
+  --term-ink:#e6edf3;
+  --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+  --type:"American Typewriter","Courier Prime",Georgia,serif;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{margin:0;height:100dvh;overflow:hidden;display:flex;flex-direction:column;
+  background:var(--desk);color:var(--desk-ink);font-family:var(--sans);
+  touch-action:manipulation;overscroll-behavior:none}
+
+/* ---------- header ---------- */
+header{padding:calc(14px + env(safe-area-inset-top)) 16px 6px}
+.brand{display:flex;justify-content:space-between;align-items:baseline;
+  font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase}
+.brand b{color:var(--js)} .brand i{color:#7ea8cf;font-style:normal}
+#resetBtn{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+  background:none;border:1px solid #3a332c;color:var(--desk-dim);border-radius:8px;padding:5px 9px;cursor:pointer}
+#resetBtn.arm{border-color:var(--rule);color:#e88b7d}
+.stats{font-family:var(--mono);font-size:11.5px;color:var(--desk-dim);margin-top:8px}
+.bar{height:4px;background:#332c25;border-radius:99px;overflow:hidden;margin-top:7px}
+.bar i{display:block;height:100%;width:0%;background:var(--ok);border-radius:99px;transition:width .3s}
+
+/* ---------- category tabs ---------- */
+.chips{display:flex;gap:7px;overflow-x:auto;padding:10px 16px 2px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;font-family:var(--mono);font-size:12px;padding:8px 12px;
+  border-radius:10px 10px 3px 3px;border:1px solid #3a332c;border-bottom:none;
+  background:#2b2520;color:var(--desk-dim);cursor:pointer}
+.chip.on{background:var(--paper);border-color:var(--paper);color:var(--ink);font-weight:700}
+
+/* ---------- card stack ---------- */
+main{flex:1;min-height:0;padding:10px 16px 4px;display:flex}
+.stack{position:relative;flex:1;min-height:0}
+.peek{position:absolute;inset:0;background:var(--paper-edge);border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+.peek.p1{transform:rotate(1.6deg) translateY(4px)}
+.peek.p2{transform:rotate(-1.2deg) translateY(8px);background:#d8d1bd}
+.scene{position:absolute;inset:0;perspective:1400px}
+.card{position:relative;width:100%;height:100%;transform-style:preserve-3d;cursor:pointer;
+  transition:transform .5s cubic-bezier(.2,.7,.3,1)}
+.card.flip{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  background:var(--paper);border-radius:16px;box-shadow:0 6px 18px rgba(0,0,0,.45);
+  padding:16px 18px;overflow-y:auto;color:var(--ink);display:flex;flex-direction:column}
+.face.back{transform:rotateY(180deg)}
+/* index-card red rule + ruled lines on the front */
+.face.front{background:
+  linear-gradient(var(--paper) 0 46px, transparent 46px 48px, transparent 48px) ,
+  linear-gradient(to bottom, transparent 46px, rgba(226,87,76,.55) 46px 48px, transparent 48px),
+  repeating-linear-gradient(to bottom, transparent 0 30px, rgba(200,216,230,.5) 30px 31px);
+  background-color:var(--paper)}
+.tag{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--ink-dim);display:flex;justify-content:space-between;margin-bottom:6px}
+.tag .cat{color:#a04338;font-weight:700}
+.q{font-family:var(--type);font-size:20px;line-height:1.55;font-weight:600;margin:auto 0;padding-top:14px}
+.hint{font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--ink-dim);
+  text-align:center;text-transform:uppercase;margin-top:12px}
+.a{font-size:15px;line-height:1.6;margin-top:10px}
+code.k{font-family:var(--mono);font-size:.88em;background:var(--term);color:#bfe3ff;
+  border-radius:5px;padding:1px 6px;white-space:nowrap}
+/* terminal snippet chips */
+.snip{margin-top:12px}
+.snip .lbl{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:700;
+  letter-spacing:.12em;padding:3px 9px;border-radius:7px 7px 0 0}
+.snip.js .lbl{background:var(--js);color:#3f3300}
+.snip.py .lbl{background:var(--py);color:#eaf4ff}
+.snip pre{margin:0;background:var(--term);border-radius:0 10px 10px 10px;
+  padding:11px 12px;overflow-x:auto}
+.snip code{font-family:var(--mono);font-size:12.5px;line-height:1.6;color:var(--term-ink);white-space:pre}
+.note{margin-top:13px;padding:9px 12px;border-left:3px solid var(--ok);
+  background:rgba(46,125,79,.08);border-radius:0 8px 8px 0;font-size:13.5px;color:#3c4a3f}
+
+/* ---------- done panel ---------- */
+#done{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;
+  justify-content:center;text-align:center;background:var(--paper);border-radius:16px;
+  box-shadow:0 6px 18px rgba(0,0,0,.45);color:var(--ink);padding:24px}
+#done .stamp{font-family:var(--mono);font-size:26px;font-weight:800;letter-spacing:.1em;
+  color:var(--ok);border:3px solid var(--ok);border-radius:10px;padding:10px 18px;
+  transform:rotate(-6deg);text-transform:uppercase}
+#done p{font-family:var(--type);font-size:15px;color:var(--ink-dim);max-width:280px}
+#done button{font-family:var(--mono);font-size:13px;font-weight:700;padding:12px 18px;
+  border-radius:12px;border:1px solid var(--ink);background:none;color:var(--ink);
+  cursor:pointer;margin-top:10px}
+#done button.primary{background:var(--ink);color:var(--paper)}
+
+/* ---------- controls ---------- */
+footer{display:flex;gap:10px;padding:12px 16px calc(14px + env(safe-area-inset-bottom))}
+footer button{font-family:var(--mono);font-size:14px;font-weight:700;letter-spacing:.06em;
+  padding:15px 0;border-radius:13px;cursor:pointer;border:1px solid #3a332c}
+#shufBtn{flex:0 0 56px;background:#2b2520;color:var(--desk-dim);font-size:17px}
+#againBtn{flex:1;background:#2b2520;color:#e88b7d;border-color:rgba(179,74,60,.55)}
+#gotBtn{flex:1.3;background:var(--ok);border-color:var(--ok);color:#eaf6ee}
+button:focus-visible{outline:2px solid var(--js);outline-offset:2px}
+@media (prefers-reduced-motion: reduce){.card{transition:none}}
+@media (min-width:560px){ main{padding:14px 10vw} .q{font-size:22px} }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand"><span><b>JS</b> ▸ <i>PY</i> · ALGO DRILLS</span><button id="resetBtn">reset</button></div>
+  <div class="stats" id="stats">loading deck…</div>
+  <div class="bar"><i id="barFill"></i></div>
+</header>
+
+<div class="chips" id="chips"></div>
+
+<main>
+  <div class="stack">
+    <div class="peek p2" id="peek2"></div>
+    <div class="peek p1" id="peek1"></div>
+    <div class="scene">
+      <div class="card" id="card">
+        <div class="face front" id="front"></div>
+        <div class="face back" id="back"></div>
+      </div>
+    </div>
+    <div id="done">
+      <div class="stamp">Deck cleared 🤙</div>
+      <p id="doneMsg"></p>
+      <button class="primary" id="doneReset">Run this deck again</button>
+      <button id="doneAll">Back to all categories</button>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <button id="shufBtn" title="Shuffle" aria-label="Shuffle deck">⇄</button>
+  <button id="againBtn">AGAIN</button>
+  <button id="gotBtn">GOT IT ✓</button>
+</footer>
+
+<script>
+const CATS = ["Basics","Types","Collections","Conditionals","Loops","Functions","Tools"];
+
+const DECK = [
+/* ---------- BASICS ---------- */
+{id:"b1",cat:"Basics",q:`Variable naming convention in each language?`,
+ a:`JS uses camelCase, Python uses snake_case. PascalCase shows up for classes, UPPER_CASE for constants.`,
+ js:`let userName = "Alex";`, py:`user_name = "Alex"`},
+{id:"b2",cat:"Basics",q:`How do you create a variable?`,
+ a:`JS needs a keyword (stick with [[let]] for now). Python is plain assignment — the [[=]] does all the work.`,
+ js:`let count = 10;`, py:`count = 10`},
+{id:"b3",cat:"Basics",q:`JS and Python are both ________ languages. What does that mean at runtime?`,
+ a:`Interpreted — code executes line-by-line at runtime instead of compiling ahead of time. JS runs on Node.js (or the browser); Python runs on the Python interpreter.`},
+{id:"b4",cat:"Basics",q:`Print something to the console in each language`,
+ a:`Your #1 debugging tool on any kata.`,
+ js:`console.log("Hello, world!");`, py:`print("Hello, world!")`},
+
+/* ---------- TYPES ---------- */
+{id:"t1",cat:"Types",q:`Boolean literals — what's the trap when you switch languages?`,
+ a:`Capitalization. Lowercase in JS, capitalized in Python. Typing [[true]] in Python throws a NameError.`,
+ js:`let isActive = true;`, py:`is_active = True`},
+{id:"t2",cat:"Types",q:`How does each language say "intentionally empty"?`,
+ a:`Both mean the deliberate absence of a value.`,
+ js:`let data = null;`, py:`data = None`},
+{id:"t3",cat:"Types",q:`What does undefined mean? (JS only)`,
+ a:`Declared but never assigned. Different from [[null]], which is an intentional empty.`,
+ js:`let value;
+console.log(value); // undefined`},
+{id:"t4",cat:"Types",q:`How does each language treat the value 9.99?`,
+ a:`JS lumps every numeric into one [[number]] type. Python splits them: [[int]] for whole numbers, [[float]] for decimals.`,
+ py:`price = 9.99   # float
+count = 10     # int`},
+{id:"t5",cat:"Types",q:`Which primitive types are immutable?`,
+ a:`All of them — strings, numbers, booleans. Any "change" actually creates a brand-new value behind the scenes.`},
+{id:"t6",cat:"Types",q:`Double or single quotes for strings?`,
+ a:`Both work in both languages. Default to double quotes so an apostrophe inside the text ("it's") doesn't break the string.`},
+
+/* ---------- COLLECTIONS ---------- */
+{id:"c1",cat:"Collections",q:`Grab "green" out of the list`,
+ a:`Zero-indexed in both — and index access happens in instant time (O(1)).`,
+ js:`let colors = ["red", "green", "blue"];
+colors[1]; // "green"`,
+ py:`colors = ["red", "green", "blue"]
+colors[1]  # "green"`},
+{id:"c2",cat:"Collections",q:`Sort these into mutable vs immutable: list, string, dict, number, set, boolean`,
+ a:`Mutable (can change in place): lists/arrays, dicts/objects, sets. Immutable: strings, numbers, booleans.`,
+ note:`Mutable = mutant, like Wolverine — it has the special ability to change.`},
+{id:"c3",cat:"Collections",q:`Read a value from a JS object vs a Python dict`,
+ a:`JS objects lean on dot notation; Python dicts always go through the key.`,
+ js:`user.name       // dot notation
+user["name"]    // bracket notation`,
+ py:`user["name"]
+user.get("name")`},
+{id:"c4",cat:"Collections",q:`Add a new key–value pair`,
+ a:`Bracket notation works in both languages.`,
+ js:`user["role"] = "admin";`,
+ py:`my_dict["middle_initial"] = "M"`},
+{id:"c5",cat:"Collections",q:`Delete a key from a Python dict`,
+ py:`del my_dict["is_ok"]`},
+{id:"c6",cat:"Collections",q:`Can one list mix strings, numbers, and booleans?`,
+ a:`Yes — lists and arrays hold any mix of data types, in order.`},
+
+/* ---------- CONDITIONALS ---------- */
+{id:"n1",cat:"Conditionals",q:`What does every comparison operator return?`,
+ a:`A boolean. That true/false is the fuel for every if, while, and filter you'll write.`,
+ js:`age >= 18   // true or false`},
+{id:"n2",cat:"Conditionals",q:`Equality in JS: == vs ===`,
+ a:`JS has both — [[===]] is the strict check (no loose type coercion) and the safer default. Python only uses [[==]].`},
+{id:"n3",cat:"Conditionals",q:`Write the if / else-if / else skeleton in both`,
+ a:`JS: [[else if]] plus braces. Python: [[elif]] plus colons and indentation.`,
+ js:`if (score >= 90) {
+  // ...
+} else if (score >= 70) {
+  // ...
+} else {
+  // ...
+}`,
+ py:`if score >= 90:
+    ...
+elif score >= 70:
+    ...
+else:
+    ...`},
+{id:"n4",cat:"Conditionals",q:`AND / OR — the operators in each language`,
+ a:`and / && → both sides must be true. or / || → one side is enough. Use these instead of nesting conditionals.`,
+ js:`age >= 21 && hasId
+hungry || bored`,
+ py:`age >= 21 and has_id
+hungry or bored`},
+{id:"n5",cat:"Conditionals",q:`When does  age >= 21 && hasId  pass?`,
+ a:`Only when BOTH sides are true. Swap [[&&]] for [[||]] and a single true side is enough to pass.`},
+
+/* ---------- LOOPS ---------- */
+{id:"l1",cat:"Loops",q:`Loop over just the values of a list`,
+ a:`JS uses for...of, Python uses for...in — the most readable option when you only care about values.`,
+ js:`for (let color of colors) {
+  console.log(color);
+}`,
+ py:`for color in colors:
+    print(color)`},
+{id:"l2",cat:"Loops",q:`⚠ The for...in trap when jumping between languages`,
+ a:`Python's [[for...in]] gives you values. JS's [[for...in]] gives you keys/indexes (it's meant for objects). For array values in JS, reach for [[for...of]].`},
+{id:"l3",cat:"Loops",q:`Break down:  for (let i = 0; i < colors.length; i++)`,
+ a:`Three parts: the starter ([[let i = 0]]), the keep-going condition ([[i < colors.length]] — the loop stops the moment it's false), and the step that runs after each pass ([[i++]]).`},
+{id:"l4",cat:"Loops",q:`Index-based loop in Python`,
+ a:`[[range(5)]] produces 0,1,2,3,4 — up to but NOT including the stop value. Pass it the list's length.`,
+ py:`for idx in range(len(colors)):
+    print(idx, colors[idx])`},
+{id:"l5",cat:"Loops",q:`You need index AND value together (Python)`,
+ a:`[[enumerate]] hands you (index, value) pairs to destructure — cleaner and safer than manual counting.`,
+ py:`for idx, color in enumerate(colors):
+    print(idx, color)`},
+{id:"l6",cat:"Loops",q:`You need index AND value together (JS)`,
+ a:`[[.entries()]] yields [index, value] pairs that you destructure on the spot.`,
+ js:`for (const [idx, color] of colors.entries()) {
+  console.log(idx, color);
+}`},
+{id:"l7",cat:"Loops",q:`Loop over an object's / dict's keys`,
+ js:`for (let key in user) {
+  console.log(key);
+}`,
+ py:`for key in user:
+    print(key)`},
+{id:"l8",cat:"Loops",q:`Loop over keys AND values`,
+ a:`The go-to pattern for processing API responses and config data.`,
+ js:`for (let [key, value] of Object.entries(user)) {
+  console.log(key, value);
+}`,
+ py:`for key, value in user.items():
+    print(key, value)`},
+{id:"l9",cat:"Loops",q:`When does a while loop earn its place — and what's the risk?`,
+ a:`Use it when you can't predict the number of iterations ahead of time. The risk: if the condition never flips to false, you've built an infinite loop — always make progress toward the exit.`,
+ js:`while (count < 3) {
+  console.log(count);
+  count++;   // the way out
+}`},
+
+/* ---------- FUNCTIONS ---------- */
+{id:"f1",cat:"Functions",q:`The keyword that creates a function`,
+ a:`JS declares with [[function]]; Python defines with [[def]].`,
+ js:`function greet() {
+  console.log("Good Afternoon");
+}`,
+ py:`def greet():
+    print("Good Afternoon")`},
+{id:"f2",cat:"Functions",q:`Parameters vs arguments`,
+ a:`Parameters are the placeholders in the definition — [[greet(name)]]. Arguments are the real values passed at the call — [[greet("Alice")]].`},
+{id:"f3",cat:"Functions",q:`Printing vs returning — why does LeetCode care?`,
+ a:`Printing only displays text. Only [[return]] sends a value back to the caller (and ends the function). The judge grades what your function RETURNS — a solution that prints the right answer but returns nothing fails every test.`,
+ js:`function greet(name) {
+  return "Good Afternoon " + name;
+}`},
+{id:"f4",cat:"Functions",q:`Arrow function — the JS shorthand`,
+ a:`One-liners get an implicit return. You'll see these constantly in callbacks and array methods.`,
+ js:`const multiply = (a, b) => a * b;`},
+{id:"f5",cat:"Functions",q:`Lambda — the Python shorthand`,
+ a:`An anonymous one-line function — the usual partner for map, filter, and sorted.`,
+ py:`multiply = lambda a, b: a * b`},
+{id:"f6",cat:"Functions",q:`What does DRY stand for, and what's the fix?`,
+ a:`Don't Repeat Yourself. The moment you're copy-pasting the same logic, wrap it in a function and call it instead.`},
+
+/* ---------- TOOLS ---------- */
+{id:"o1",cat:"Tools",q:`Keep only the evens from [1, 2, 3, 4]`,
+ a:`filter is CONSTRUCTIVE — you get a new collection and the original stays untouched.`,
+ js:`let evens = nums.filter(n => n % 2 === 0);`,
+ py:`evens = list(filter(lambda n: n % 2 == 0, nums))`},
+{id:"o2",cat:"Tools",q:`Transform every element: double [1, 2, 3, 4]`,
+ a:`Build a new list from a list — map in JS, list comprehension in Python. Massive in data processing and katas.`,
+ js:`let doubled = nums.map(n => n * 2);`,
+ py:`doubled = [n * 2 for n in nums]`},
+{id:"o3",cat:"Tools",q:`⚠ Which sort mutates the original?`,
+ a:`JS [[.sort()]] is DESTRUCTIVE — it changes the array in place. Python's [[sorted()]] is constructive — it hands back a fresh list.`,
+ js:`nums.sort((a, b) => a - b); // mutates nums!`,
+ py:`sorted_nums = sorted(nums)  # new list`},
+{id:"o4",cat:"Tools",q:`Why does JS numeric sort need  (a, b) => a - b ?`,
+ a:`That comparator forces numeric order: a negative result puts [[a]] first, positive puts [[b]] first. Without it, [[.sort()]] compares values as strings — so [3, 1, 10] would come out [1, 10, 3].`},
+{id:"o5",cat:"Tools",q:`Constructive vs destructive — define both`,
+ a:`Constructive methods return a NEW data structure (filter, map, sorted). Destructive methods mutate the original (JS .sort()). Accidentally mutating shared data is a classic bug source.`},
+{id:"o6",cat:"Tools",q:`The even/odd check every kata uses`,
+ a:`[[%]] gives the remainder after division. Remainder tricks power FizzBuzz, digit extraction, alternating patterns, and more.`,
+ js:`n % 2 === 0   // even`,
+ py:`n % 2 == 0    # even`},
+{id:"o7",cat:"Tools",q:`filter vs map — how do you pick?`,
+ a:`filter answers "which items survive?" (same items, fewer of them). map answers "what does each item become?" (same count, transformed). Need both? Filter first, then map.`},
+{id:"o8",cat:"Tools",q:`Rewrite this loop the Pythonic way`,
+ a:`Same result, one line — list comprehension replaces the manual build-a-list loop.`,
+ py:`doubled = []
+for n in nums:
+    doubled.append(n * 2)
+
+# becomes:
+doubled = [n * 2 for n in nums]`},
+];
+
+/* ================= state & storage ================= */
+const KEY = "cp-flashcards-v1";
+let mastered = new Set();
+let cat = "All";
+let queue = [];
+let store = null;
+
+/* Storage adapter: Claude artifact storage → browser localStorage (Safari /
+   Home Screen) → in-memory. Every path is guarded so no environment crashes. */
+function makeStore(){
+  if (typeof window.storage !== "undefined" && window.storage && typeof window.storage.get === "function"){
+    return {
+      async get(){ try{ const r = await window.storage.get(KEY); return r && r.value ? r.value : null; }catch(e){ return null; } },
+      async set(v){ try{ await window.storage.set(KEY, v); }catch(e){} }
+    };
+  }
+  try{
+    const t = "__cp_probe"; window.localStorage.setItem(t,"1"); window.localStorage.removeItem(t);
+    return {
+      async get(){ try{ return window.localStorage.getItem(KEY); }catch(e){ return null; } },
+      async set(v){ try{ window.localStorage.setItem(KEY, v); }catch(e){} }
+    };
+  }catch(e){ /* sandboxed or storage blocked */ }
+  let mem = null;
+  return { async get(){ return mem; }, async set(v){ mem = v; } };
+}
+
+async function loadProgress(){
+  store = makeStore();
+  const v = await store.get();
+  if(v){ try{ mastered = new Set(JSON.parse(v)); }catch(e){} }
+}
+async function saveProgress(){ if(store) store.set(JSON.stringify([...mastered])); }
+
+/* ================= helpers ================= */
+const $ = id => document.getElementById(id);
+function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
+function fmt(s){return esc(s).replace(/\[\[(.+?)\]\]/g,'<code class="k">$1</code>')}
+function inCat(c){ return cat==="All" ? DECK : DECK.filter(x=>x.cat===cat) }
+
+function buildQueue(){ queue = inCat().filter(x=>!mastered.has(x.id)).map(x=>x.id) }
+
+function snip(kind,label,code){
+  const wrap=document.createElement("div"); wrap.className="snip "+kind;
+  const l=document.createElement("span"); l.className="lbl"; l.textContent=label;
+  const pre=document.createElement("pre"); const c=document.createElement("code");
+  c.textContent=code; pre.appendChild(c); wrap.append(l,pre); return wrap;
+}
+
+/* ================= render ================= */
+function render(){
+  const pool=inCat(), doneCt=pool.filter(x=>mastered.has(x.id)).length;
+  $("stats").textContent = queue.length
+    ? `${queue.length} to go · ${doneCt}/${pool.length} mastered · ${cat.toLowerCase()}`
+    : `${doneCt}/${pool.length} mastered · ${cat.toLowerCase()}`;
+  $("barFill").style.width = pool.length ? (doneCt/pool.length*100)+"%" : "0%";
+  $("peek1").style.display = queue.length>1 ? "block":"none";
+  $("peek2").style.display = queue.length>2 ? "block":"none";
+
+  const card=$("card"), done=$("done");
+  if(!queue.length){
+    card.style.display="none"; done.style.display="flex";
+    $("doneMsg").textContent = `All ${pool.length} ${cat==="All"?"":cat.toLowerCase()+" "}cards mastered. Go cash that in on a kata.`;
+    $("againBtn").disabled=$("gotBtn").disabled=$("shufBtn").disabled=true;
+    return;
+  }
+  $("againBtn").disabled=$("gotBtn").disabled=$("shufBtn").disabled=false;
+  done.style.display="none"; card.style.display="block";
+  card.classList.remove("flip");
+
+  const c = DECK.find(x=>x.id===queue[0]);
+  $("front").innerHTML =
+    `<div class="tag"><span class="cat">${c.cat}</span><span>${queue.length} left</span></div>`+
+    `<div class="q">${fmt(c.q)}</div><div class="hint">tap to flip</div>`;
+
+  const back=$("back"); back.innerHTML =
+    `<div class="tag"><span class="cat">Answer</span><span>${c.cat}</span></div>`;
+  if(c.a){ const d=document.createElement("div"); d.className="a"; d.innerHTML=fmt(c.a); back.appendChild(d); }
+  if(c.js) back.appendChild(snip("js","JAVASCRIPT",c.js));
+  if(c.py) back.appendChild(snip("py","PYTHON",c.py));
+  if(c.note){ const n=document.createElement("div"); n.className="note"; n.innerHTML=fmt(c.note); back.appendChild(n); }
+}
+
+/* ================= actions ================= */
+function again(){ if(queue.length){ queue.push(queue.shift()); render(); } }
+function got(){
+  if(!queue.length) return;
+  mastered.add(queue.shift()); saveProgress(); render();
+}
+function shuffle(){
+  for(let i=queue.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [queue[i],queue[j]]=[queue[j],queue[i]]; }
+  render();
+}
+function resetCat(){
+  inCat().forEach(x=>mastered.delete(x.id));
+  saveProgress(); buildQueue(); render();
+}
+
+/* ================= wiring ================= */
+$("card").addEventListener("click",()=>$("card").classList.toggle("flip"));
+$("againBtn").addEventListener("click",again);
+$("gotBtn").addEventListener("click",got);
+$("shufBtn").addEventListener("click",shuffle);
+$("doneReset").addEventListener("click",resetCat);
+$("doneAll").addEventListener("click",()=>{ cat="All"; drawChips(); buildQueue(); render(); });
+
+let armTimer=null;
+$("resetBtn").addEventListener("click",e=>{
+  const b=e.currentTarget;
+  if(b.classList.contains("arm")){ b.classList.remove("arm"); b.textContent="reset"; clearTimeout(armTimer); resetCat(); }
+  else{ b.classList.add("arm"); b.textContent="sure?";
+    armTimer=setTimeout(()=>{ b.classList.remove("arm"); b.textContent="reset"; },2600); }
+});
+
+document.addEventListener("keydown",e=>{
+  if(e.code==="Space"){ e.preventDefault(); $("card").classList.toggle("flip"); }
+  if(e.key==="1") again();
+  if(e.key==="2") got();
+});
+
+function drawChips(){
+  const box=$("chips"); box.innerHTML="";
+  ["All",...CATS].forEach(c=>{
+    const b=document.createElement("button");
+    b.className="chip"+(c===cat?" on":""); b.textContent=c;
+    b.addEventListener("click",()=>{ cat=c; drawChips(); buildQueue(); render(); });
+    box.appendChild(b);
+  });
+}
+
+(async function init(){
+  await loadProgress();
+  drawChips(); buildQueue(); render();
+})();
+</script>
+</body>
+</html>
